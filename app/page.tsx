@@ -1,4 +1,15 @@
+'use client';
+
+import { useState } from 'react';
+
 export default function SSCCheatSheet() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState<{
+    mob: string;
+    notes: string;
+    section: string;
+  } | null>(null);
+
   const sections = [
     {
       title: 'Pre-Hydross Trash',
@@ -60,20 +71,10 @@ export default function SSCCheatSheet() {
           </p>
         </header>
 
-        <div className="grid md:grid-cols-3 gap-4 mb-10">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
+        <div className="mb-10">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 inline-block">
             <div className="text-zinc-400 text-sm mb-2">Raid</div>
             <div className="text-2xl font-bold">SSC</div>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
-            <div className="text-zinc-400 text-sm mb-2">Format</div>
-            <div className="text-2xl font-bold">Interactive Guide</div>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
-            <div className="text-zinc-400 text-sm mb-2">Optimized For</div>
-            <div className="text-2xl font-bold">Desktop + Mobile</div>
           </div>
         </div>
 
@@ -81,11 +82,24 @@ export default function SSCCheatSheet() {
           <input
             placeholder="Search mechanics, mobs, assignments..."
             className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-4 outline-none focus:border-cyan-500 text-lg"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
         <div className="space-y-8">
-          {sections.map((section) => (
+          {sections
+            .map((section) => ({
+              ...section,
+              items: section.items.filter(
+                (item) =>
+                  item.mob.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.notes.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  section.title.toLowerCase().includes(searchQuery.toLowerCase())
+              ),
+            }))
+            .filter((section) => section.items.length > 0)
+            .map((section) => (
             <section
               key={section.title}
               className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden"
@@ -112,7 +126,16 @@ export default function SSCCheatSheet() {
                         </p>
                       </div>
 
-                      <button className="px-4 py-2 rounded-xl bg-cyan-500 text-black font-semibold hover:scale-105 transition-transform">
+                      <button
+                        onClick={() =>
+                          setSelectedItem({
+                            mob: item.mob,
+                            notes: item.notes,
+                            section: section.title,
+                          })
+                        }
+                        className="px-4 py-2 rounded-xl bg-cyan-500 text-black font-semibold hover:scale-105 transition-transform"
+                      >
                         Quick View
                       </button>
                     </div>
@@ -129,6 +152,32 @@ export default function SSCCheatSheet() {
             yourcheatsheet.vercel.app
           </p>
         </footer>
+
+        {selectedItem && (
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedItem(null)}
+          >
+            <div
+              className="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-w-lg w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-cyan-400 text-sm font-medium mb-2">
+                {selectedItem.section}
+              </div>
+              <h3 className="text-3xl font-bold mb-4">{selectedItem.mob}</h3>
+              <p className="text-zinc-300 text-lg leading-relaxed mb-6">
+                {selectedItem.notes}
+              </p>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 transition-colors font-semibold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
